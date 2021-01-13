@@ -1,8 +1,9 @@
 package main
 
 import (
+	"context"
+	"fmt"
 	"net/http"
-  "context"
 	"nhooyr.io/websocket"
 )
 
@@ -11,11 +12,13 @@ type WsServer struct {
 }
 
 func (server *WsServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	fmt.Println("request for connection")
 	connection, err := websocket.Accept(w, r, nil)
 	if err != nil {
+		fmt.Println(err)
 		panic(err)
 	}
-	//defer c.Close(websocket.StatusInternalError, "")
+	defer connection.Close(websocket.StatusInternalError, "")
 	client := Client{
 		conn: connection,
 	}
