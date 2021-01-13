@@ -6,3 +6,5 @@ https://github.com/vi/websocat
 
 
 https://golang.org/pkg/net/
+
+https://www.rabbitmq.com/
