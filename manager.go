@@ -2,12 +2,13 @@ package main
 
 import (
 	"context"
-	"errors"
 	"fmt"
 )
 
 type Manager struct {
 	clients map[uint64]*Client
+
+	queue *Rabitmq
 }
 
 func (m *Manager) AddClient(ctx context.Context, client *Client) error {
@@ -19,7 +20,12 @@ func (m *Manager) AddClient(ctx context.Context, client *Client) error {
 func (m *Manager) SendMessage(ctx context.Context, targetId uint64, msg []byte) error {
 	target, ok := m.clients[targetId]
 	if !ok {
-		return errors.New("target not found !")
+		err := m.queue.EnqueueMessage(ctx, targetId, msg)
+		if err != nil {
+			return err
+		}
+		fmt.Println("target not found ! message enqueued")
+		return nil
 	}
 	return target.WriteMessage(ctx, msg)
 }

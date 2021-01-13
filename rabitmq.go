@@ -2,17 +2,20 @@ package main
 
 import (
 	"context"
+	"flag"
+	"fmt"
 	"github.com/streadway/amqp"
 )
 
-var url = flag.String("url", "amqp://guest:guest@127.0.0.1:55005/", "Amqp url for both the publishe and subscriber")
+var rabitPort = "32791"
+var url = flag.String("url", "amqp://guest:guest@127.0.0.1:"+rabitPort+"/", "Amqp url for both the publishe and subscriber")
 
 type Rabitmq struct {
-	*amqp.Connection
-	*amqp.Channel
+	conn    *amqp.Connection
+	channel *amqp.Channel
 }
 
-func NewRabitmq(ctx context.Context) (*rabitmq, error) {
+func NewRabitmq(ctx context.Context) (*Rabitmq, error) {
 	conn, err := amqp.Dial(*url)
 	if err != nil {
 		fmt.Println(err)
@@ -22,18 +25,18 @@ func NewRabitmq(ctx context.Context) (*rabitmq, error) {
 	if err != nil {
 		fmt.Println(err)
 	}
-	return &rabitmq{
+	return &Rabitmq{
 		conn:    conn,
 		channel: ch,
 	}, nil
 }
 
-func (q *rabitmq) EnqueueMessage(ctx context.Context, targetId uint64, msg []byte) error {
+func (q *Rabitmq) EnqueueMessage(ctx context.Context, targetId uint64, msg []byte) error {
 	_, err := q.channel.QueueDeclare(fmt.Sprintf("user_%d", targetId), true, false, false, true, nil)
 	if err != nil {
 		return err
 	}
-	return q.channel.Publish("", fmt.Sprintf("user_%d", targetId), true, false, false, amqp.Publishing{
+	return q.channel.Publish("", fmt.Sprintf("user_%d", targetId), true, false, amqp.Publishing{
 		Body: msg,
 	})
 }
