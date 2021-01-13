@@ -6,6 +6,7 @@ import (
 
 type Client struct {
 	conn *websocket.Conn
+  Id uint64
 }
 
 
