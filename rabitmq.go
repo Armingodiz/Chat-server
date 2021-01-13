@@ -7,7 +7,7 @@ import (
 	"github.com/streadway/amqp"
 )
 
-var rabitPort = "32791"
+var rabitPort = "32814"
 var url = flag.String("url", "amqp://guest:guest@127.0.0.1:"+rabitPort+"/", "Amqp url for both the publishe and subscriber")
 
 type Rabitmq struct {
@@ -39,4 +39,27 @@ func (q *Rabitmq) EnqueueMessage(ctx context.Context, targetId uint64, msg []byt
 	return q.channel.Publish("", fmt.Sprintf("user_%d", targetId), true, false, amqp.Publishing{
 		Body: msg,
 	})
+}
+
+func (q *Rabitmq) ConsumeMessage(ctx context.Context, targetId uint64) (<-chan []byte, error) {
+	_, err := q.channel.QueueDeclare(fmt.Sprintf("user_%d", targetId), true, false, false, true, nil)
+	if err != nil {
+		return nil, err
+	}
+	delivery, err := q.channel.Consume(fmt.Sprintf("user_%d", targetId), "", true, false, false, true, nil)
+	if err != nil {
+		return nil, err
+	}
+	messages := make(chan []byte)
+	go func() {
+		for {
+			select {
+			case <-ctx.Done():
+				return
+			case msg := <-delivery:
+				messages <- msg.Body
+			}
+		}
+	}()
+	return messages, nil
 }

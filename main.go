@@ -7,11 +7,9 @@ import (
 	"net/http"
 )
 
-var ln net.Listener
 
 func main() {
 	l, err := net.Listen("tcp", ":8080")
-	ln = l
 	if err != nil {
 		panic(err)
 	}

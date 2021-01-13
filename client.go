@@ -41,6 +41,7 @@ func (c *Client) Register(ctx context.Context, manager *Manager) error {
 				c.Id = id
 				manager.AddClient(ctx, c)
 				c.ReadMessage(context.Background(), manager)
+				c.ConsumeMessagesFromeQueue(context.Background(), manager)
 				return
 			}
 		}
@@ -71,6 +72,22 @@ func (c *Client) ReadMessage(ctx context.Context, manager *Manager) error {
 				ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
 				manager.SendMessage(ctx, targetId, body)
 			}
+		}
+	}()
+	return nil
+}
+
+func (c *Client) ConsumeMessagesFromeQueue(ctx context.Context, manager *Manager) error {
+	messagesChan, err := manager.queue.ConsumeMessage(ctx, c.Id)
+	if err != nil {
+		return err
+	}
+	go func() {
+		select {
+		case <-ctx.Done():
+			return
+		case msg := <-messagesChan:
+			c.WriteMessage(ctx, msg)
 		}
 	}()
 	return nil
