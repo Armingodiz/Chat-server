@@ -29,3 +29,8 @@ func (m *Manager) SendMessage(ctx context.Context, targetId uint64, msg []byte) 
 	}
 	return target.WriteMessage(ctx, msg)
 }
+
+func (m *Manager) DeleteClient(ctx context.Context, client *Client) error {
+	delete(m.clients, client.Id)
+	return nil
+}

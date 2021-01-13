@@ -40,9 +40,13 @@ func (c *Client) Register(ctx context.Context, manager *Manager) error {
 				id := uint64(message["id"].(float64))
 				c.Id = id
 				manager.AddClient(ctx, c)
-        ctx = c.conn.CloseRead(context.Background())
+				ctx = c.conn.CloseRead(context.Background())
 				c.ReadMessage(ctx, manager)
 				c.ConsumeMessagesFromeQueue(ctx, manager)
+				go func() {
+					<-ctx.Done()
+					manager.DeleteClient(context.Background(), c)
+				}()
 				return
 			}
 		}
