@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 	"nhooyr.io/websocket"
+	"time"
 )
 
 type WsServer struct {
@@ -18,10 +19,11 @@ func (server *WsServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		fmt.Println(err)
 		panic(err)
 	}
-	defer connection.Close(websocket.StatusInternalError, "")
+	// adding this line caues closing the connection after go in waitin mood for id .
+	//defer connection.Close(websocket.StatusInternalError, "")
 	client := Client{
 		conn: connection,
 	}
-	server.manager.AddClient(context.Background(), &client)
-
+	ctx, _ := context.WithTimeout(context.Background(), 60*time.Second)
+	client.Register(ctx, server.manager)
 }
