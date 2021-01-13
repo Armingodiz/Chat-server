@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"nhooyr.io/websocket"
+	"time"
 )
 
 type Client struct {
@@ -17,7 +18,7 @@ func (c *Client) WriteMessage(ctx context.Context, message []byte) error {
 }
 
 func (c *Client) Register(ctx context.Context, manager *Manager) error {
-  fmt.Println("waiting for id ...")
+	fmt.Println("waiting for id ...")
 	go func() {
 		for {
 			select {
@@ -27,19 +28,19 @@ func (c *Client) Register(ctx context.Context, manager *Manager) error {
 			default:
 				_, body, err := c.conn.Read(ctx)
 				if err != nil {
-          fmt.Println(err)
+					fmt.Println(err)
 					continue
 				}
 				var message map[string]interface{}
 				err = json.Unmarshal(body, &message)
 				if err != nil {
-          fmt.Println(err)
+					fmt.Println(err)
 					continue
 				}
 				id := uint64(message["id"].(float64))
 				c.Id = id
 				manager.AddClient(ctx, c)
-				c.ReadMessage(context.Background())
+				c.ReadMessage(context.Background(), manager)
 				return
 			}
 		}
@@ -47,22 +48,30 @@ func (c *Client) Register(ctx context.Context, manager *Manager) error {
 	return nil
 }
 
-func (c *Client) ReadMessage(ctx context.Context) error {
-	for {
-		select {
-		case <-ctx.Done():
-			fmt.Println("client " + string(c.Id) + " Done listening for messages !")
-			return nil
-		default:
-			_, body, err := c.conn.Read(ctx)
-			if err != nil {
-				return err
-			}
-			var message map[string]interface{}
-			err = json.Unmarshal(body, &message)
-			if err != nil {
-				return err
+func (c *Client) ReadMessage(ctx context.Context, manager *Manager) error {
+	go func() {
+		for {
+			select {
+			case <-ctx.Done():
+				fmt.Println("client " + string(c.Id) + " Done listening for messages !")
+				return
+			default:
+				_, body, err := c.conn.Read(ctx)
+				if err != nil {
+					fmt.Println(err)
+					continue
+				}
+				var message map[string]interface{}
+				err = json.Unmarshal(body, &message)
+				targetId := uint64(message["target"].(float64))
+				if err != nil {
+					fmt.Println(err)
+					continue
+				}
+				ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
+				manager.SendMessage(ctx, targetId, body)
 			}
 		}
-	}
+	}()
+	return nil
 }
