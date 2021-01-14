@@ -16,7 +16,7 @@ running rabbitmq container `sudo docker run -d --name testRabit -P rabbitmq:mana
 
 `sudo docker port testRabit` replace the "rabitPort" in rabitmq.go with the port befor the last port 
 
-![Output](Screenshot from 2021-01-14 00-18-41.png)
+![Output](port.png)
 
 `go run *.go`
 
@@ -26,7 +26,7 @@ Adding a client to server chat `websocat ws:\\127.0.0.1:8080\`
 
 Register user `{"id":your id}`
 
-sending message '{"target":target Id ,"msg":your msg }'
+sending message `{"target":target Id ,"msg":your msg }`
 
 ## This project is a good practice for : 
 
