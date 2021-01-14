@@ -14,7 +14,7 @@ pulling rabbitmq image `docker pull rabbitmq`
 
 running rabbitmq container `sudo docker run -d --name testRabit -P rabbitmq:management`
 
-`sudo docker port testRabit` replace the "rabitPort" in rabitmq.go with the port befor the last port 
+`sudo docker port testRabit` replace the "rabitPort" in rabitmq.go with the port befor the last port (in this example "32818")
 
 ![Output](port.png)
 
